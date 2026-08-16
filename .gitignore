@@ -24,7 +24,6 @@ ENV/
 .ipynb_checkpoints/
 
 # Trained models (regenerable from the notebook)
-*.pkl
 *.joblib
 *.h5
 *.pt
