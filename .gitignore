@@ -28,6 +28,9 @@ ENV/
 *.h5
 *.pt
 *.pth
+*.pkl
+backend/model/
+model/
 
 # Node / Vite
 node_modules/
