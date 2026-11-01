@@ -10,6 +10,23 @@ Run with:
 """
 
 import os
+
+# Load environment variables from .env file if available
+if os.path.exists(".env"):
+    with open(".env") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                key, _, value = line.partition("=")
+                os.environ.setdefault(key.strip(), value.strip())
+
+# Read allowed CORS origins from environment (comma-separated)
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000",
+).split(",")
+
+from huggingface_hub import hf_hub_download
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -29,26 +46,23 @@ app = FastAPI(
 # Allow the React dev server (Vite default port 5173, CRA default 3000) to call this API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ---------------------------------------------------------------------------
-# Load the trained model pipeline at startup
+# Load the trained model pipeline at startup from Hugging Face Hub
 # ---------------------------------------------------------------------------
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "service_optimization_model.pkl")
+REPO_ID = os.getenv("REPO_ID", "taisinnigartisha/Airline_Passenger_Satisfaction_Predictor")
+FILENAME = os.getenv("FILENAME", "sklearn_model.joblib")
 
 model = None
 model_load_error = None
 try:
-    model = joblib.load(MODEL_PATH)
+    model_path = hf_hub_download(repo_id=REPO_ID, filename=FILENAME)
+    model = joblib.load(model_path)
 except Exception as exc:  # noqa: BLE001
     model_load_error = str(exc)
 
